@@ -1,0 +1,54 @@
+name: 'Deploy updated BPMNs to Zeebe'
+
+on:
+  push:
+    paths:
+      - '*.bpmn' # match '*.bpmn' files (created or updated)
+    branches: [ test ] # match specific branch
+
+jobs:
+  prepare-files:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix-added: ${{ steps.file-changes.outputs.files_added }}
+      matrix-modified: ${{ steps.file-changes.outputs.files_modified }}
+    steps:
+      - id: file-changes
+        uses: trilom/file-changes-action@v1.2.4
+  
+  get-bearer-token:
+    runs-on: ubuntu-latest
+    outputs:
+      bearer-token: ${{ fromJson(steps.zeebeBearer.outputs.response).access_token }}
+    steps:
+      - name: Get Bearer Toker
+        uses: fjogeleit/http-request-action@v1.16.4
+        id: zeebeBearer
+        with:
+          url: 'https://login.cloud.camunda.io/oauth/token'
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/x-www-form-urlencoded"}'
+          data: 'grant_type=client_credentials&audience=zeebe.camunda.io&client_id=${{ secrets.ZEEBE_CLIENT_ID }}&client_secret=${{ secrets.ZEEBE_CLIENT_SECRET }}'
+
+      - name: Show Response
+        run: |
+          echo ${{ steps.zeebeBearer.outputs.response }}
+
+  deploy-modified-files:
+    needs: [prepare-files, get-bearer-token]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{ fromJSON(needs.prepare-files.outputs.matrix-modified) }}
+        bearerToken: ${{ fromJSON(needs.get-bearer-token.outputs.bearer-token) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Echo file
+        run: |
+          echo ${{ matrix.file }} # to test if the correct file was passed
+
+      - name: Deploy to Zeebe
+        run: |
+          curl -X POST "https://${{ secrets.CLUSTER_REGION }}.zeebe.camunda.io/${{ secrets.CLUSTER_ID }}/v2/deployments" -H "Authorization: Bearer ${{ matrix.bearerToken }}" -F "resources=@${{ github.workspace }}/${{ matrix.file }}"

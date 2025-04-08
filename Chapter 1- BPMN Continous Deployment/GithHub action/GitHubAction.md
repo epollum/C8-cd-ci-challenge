@@ -1,6 +1,10 @@
 1. Add github-action.yaml as a workflow in your github repository
 2. Create a client that has access to Zeebe API. Take note of the ClIENT_ID and CLIENT_SECRET
-3. Create workflow secrets in the repository:
+![image](https://github.com/user-attachments/assets/02a5a532-d96e-490f-a0fd-8f41bd8e11b1)
+
+4. Create action secrets in the repository:
+![image](https://github.com/user-attachments/assets/725dab09-c637-4b86-b4bd-7fb96cf2a57b)
+
 
 | Secret Name                       |                         Value |
 |-----------------------------------|------------------------------:|

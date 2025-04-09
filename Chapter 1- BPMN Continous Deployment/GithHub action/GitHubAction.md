@@ -16,3 +16,4 @@
 
 
 For SM, replace the URL in the *Deploy to Zeebe* with _curl -X POST "https://${{ secrets.ZEEBE_GATEWAY_URL }}/v2/deployments"
+Replace the ULR in the *get-bearer-token* step with your Oauth token endpoint, for example - OAuth URL: http://keycloak.local.dev/auth/realms/camunda-platform/protocol/openid-connect/token
